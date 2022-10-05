@@ -38,6 +38,8 @@ services:
       # - ./kc/h2:/opt/keycloak/data/h2
   stigman:
     image: nuwcdivnpt/stig-manager:latest
+    # alternative image based on Ironbank Node.js
+    # image: nuwcdivnpt/stig-manager:latest-ironbank
     environment:
       - STIGMAN_OIDC_PROVIDER=http://keycloak:8080/realms/stigman
       - STIGMAN_CLIENT_OIDC_PROVIDER=https://localhost/kc/realms/stigman
