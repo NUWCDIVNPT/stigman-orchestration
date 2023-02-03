@@ -54,6 +54,7 @@ services:
     image: mysql:8.0.21
     # alternative image from Ironbank
     # image: registry1.dso.mil/ironbank/opensource/mysql/mysql8:8.0.21
+    command: --innodb-buffer-pool-size=512M --sort_buffer_size=64M 
     environment:
       - MYSQL_ROOT_PASSWORD=rootpw
       - MYSQL_USER=stigman
