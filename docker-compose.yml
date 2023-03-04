@@ -16,7 +16,7 @@ services:
     ports:
     - "443:443"
   keycloak:
-    image: quay.io/keycloak/keycloak:19.0.2
+    image: quay.io/keycloak/keycloak:21.0
     # alternative image from Ironbank
     # image: registry1.dso.mil/ironbank/opensource/keycloak/keycloak:19.0.2
     environment:
@@ -27,11 +27,13 @@ services:
       - KC_HOSTNAME_ADMIN_URL=https://localhost/kc/
       - KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx
       - KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
-      - KC_SPI_TRUSTSTORE_FILE_FILE=/tmp/truststore.p12
+      # - KC_SPI_TRUSTSTORE_FILE_FILE=/tmp/truststore.p12
+      - KC_SPI_TRUSTSTORE_FILE_FILE=/tmp/truststore.jks
       - KC_SPI_TRUSTSTORE_FILE_PASSWORD=password
     command: start --import-realm
     volumes:
-      - ./certs/dod/Certificates_PKCS7_v5.9_DoD.pem.p12:/tmp/truststore.p12
+      # - ./certs/dod/Certificates_PKCS7_v5.9_DoD.pem.p12:/tmp/truststore.p12
+      - ./certs/dod/dod-certs.jks:/tmp/truststore.jks
       - ./kc/stigman_realm.json:/opt/keycloak/data/import/stigman_realm.json
       - ./kc/create-x509-user.jar:/opt/keycloak/providers/create-x509-user.jar
       # uncomment below to persist Keycloak data
