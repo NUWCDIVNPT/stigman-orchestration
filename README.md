@@ -50,7 +50,7 @@ The orchestration has successfully bootstrapped when you see a `started` message
 {"date":"2022-10-01T18:04:26.734Z","level":3,"component":"index","type":"started","data":{"durationS":21.180474449,"port":54000,"api":"/api","client":"/","documentation":"/docs"}}
 ```
 
-## Authenticating to STIG Manager with CAC
+## Authenticating to STIG Manager with Username and Password
 
 Once STIG Manager has started, navigate your browser to:
 
@@ -64,12 +64,15 @@ https://your_dns_hostname/stigman/
 You can access the Keycloak admin pages by navigating to:
 
 ```
-https://localhost/kc/admin
+https://your_dns_hostname/kc/admin
 ```
 
 Login with the credentials `admin/Pa55w0rd`
 - Setup new user accounts by going to the stigman realm and creating the users there.
-- Have your user sign in after c
+- Use the Details tab to modify users
+- Use the credentials tab to set the user's password
+- Use the role mapping tab to set roles as required for your org.
+- Have your user sign in after creating accounts
 
 
 ## Ending the orchestration
