@@ -89,8 +89,6 @@ docker-compose down
 
 ### Nginx
 
-Client certificate authentication is **required** for access to the Keycloak authorization endpoint. Client certificate authentication is **optional** for API endpoints since access to the API is controlled by OAuth2 tokens.
-
 Nginx requires a PEM file containing certificates for the DoD Root CA and Intermediate CAs used to sign CAC certificates. 
 
 > The example provides the file `certs/dod/Certificates_PKCS7_v5.9_DoD.pem.pem` for this purpose, which is mounted to the Nginx container at `/etc/nginx/dod-certs.pem`
