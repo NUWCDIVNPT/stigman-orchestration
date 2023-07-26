@@ -25,7 +25,7 @@ This general architecture can be implemented with a wide range of technologies, 
 - Internal Certificate Authority
 - DNS CNAME entry pointing to stigman on the docker host 
 
-This example uses a server certificate issued to the host `stigman` and signed by your internal CA`. For the example to work, you must have a working internal certificate authority).
+This example uses a server certificate issued to the host `stigman` and signed by your internal CA. For the example to work, you must have a working internal certificate authority.
 
 
 
