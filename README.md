@@ -18,7 +18,7 @@ This general architecture can be implemented with a wide range of technologies, 
 ## Requirements for running the example
 
 - Recent Windows, Linux, or macOS
-- CAC reader configured for your OS
+- Username and Password configured in Keycloak
 - docker
 - docker-compose
 - Chrome, Edge, or Firefox browser
