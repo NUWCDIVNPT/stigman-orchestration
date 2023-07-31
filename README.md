@@ -120,6 +120,11 @@ Keycloak behind Nginx requires a keystore that contains certificates for the DoD
 `chrome://settings/clearBrowserData` - Cached images and files
 
 
+## Community Solutions
+
+The following repos offer alternate approaches to deploying STIG Manager:
+
+[@jeremyatourville/stigman-orchestration](https://github.com/jeremyatourville/stigman-orchestration)
 
 
 
