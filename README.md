@@ -122,9 +122,8 @@ Keycloak behind Nginx requires a keystore that contains certificates for the DoD
 
 ## Community Solutions
 
-The following repos offer alternate approaches to deploying STIG Manager:
+The following repos are not maintained or tested by the STIG Manager team, but offer alternate STIG Manager deployment configurations that have been shared by the community:
 
-[@jeremyatourville/stigman-orchestration](https://github.com/jeremyatourville/stigman-orchestration)
+- [@jeremyatourville/stigman-orchestration](https://github.com/jeremyatourville/stigman-orchestration) - A docker-compose orchestration that uses a reverse proxy and username/password authentication.
 
-
-
+If you have a solution you'd like to share, you can open a pull request to add it to this list!
