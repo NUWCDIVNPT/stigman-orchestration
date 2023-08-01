@@ -1,4 +1,4 @@
-# STIG Manager with CAC Authentication
+# STIG Manager with Username/Password Authentication
 
 ## Limitations of this example
 
