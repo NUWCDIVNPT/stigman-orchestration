@@ -52,14 +52,7 @@ The orchestration has successfully bootstrapped when you see a `started` message
 
 ## Authenticating to STIG Manager with Username and Password
 
-Once STIG Manager has started, navigate your browser to:
-
-```
-https://your_dns_hostname/stigman/
-```
-
-- You will be redircted to Keycloak
-- Sign into keycloak with your username and password.
+#1 Create user accounts:
 
 You can access the Keycloak admin pages by navigating to:
 
@@ -74,6 +67,16 @@ Login with the credentials `admin/Pa55w0rd`
 - Click on the details tab and fill in Username,Email,First,Last.  Now click the credentials tab to set the user's password
 - Use the role mapping tab to set roles as required for your org.
 - Have your user sign in after creating accounts
+
+
+#2 After creating user accounts:
+
+Once STIG Manager has started, navigate your browser to:
+```
+https://your_dns_hostname/stigman/
+```
+- You will be redircted to Keycloak
+- Sign into keycloak with your username and password.
 
 
 ## Ending the orchestration
