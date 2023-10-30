@@ -68,9 +68,10 @@ https://your_dns_hostname/kc/admin
 ```
 
 Login with the credentials `admin/Pa55w0rd`
-- Setup new user accounts by going to the stigman realm and creating the users there.
-- Use the Details tab to modify users
-- Use the credentials tab to set the user's password
+- After login move your mouse to the upper left corner of the screen.  You'll see the Keycloak logo.  Immediately below the KC logo is a dropdown box.  You can select either master or stigman realm.  Choose stigman.
+- Now setup new user accounts by creating the users.
+- Click on Users in the left list (just below Realm Roles). Now click on the User List tab.  Click on a user to modify.
+- Click on the details tab and fill in Username,Email,First,Last.  Now click the credentials tab to set the user's password
 - Use the role mapping tab to set roles as required for your org.
 - Have your user sign in after creating accounts
 
