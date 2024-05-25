@@ -120,6 +120,10 @@ Keycloak behind Nginx requires a keystore that contains certificates for the DoD
 `chrome://settings/clearBrowserData` - Cached images and files
 
 
+## Alternate non-CAC Example
+
+The [demo-auth-no-CAC branch of this repo](https://github.com/NUWCDIVNPT/stigman-orchestration/tree/demo-auth-no-CAC) demonstrates a configuration that does not require CAC or mutual TLS, and uses a Keycloak container with built-in usernames and passwords available here: [https://hub.docker.com/r/nuwcdivnpt/stig-manager-auth](https://hub.docker.com/r/nuwcdivnpt/stig-manager-auth)
+
 ## Community Solutions
 
 The following repos are not maintained or tested by the STIG Manager team, but offer alternate STIG Manager deployment configurations that have been shared by the community:
