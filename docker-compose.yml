@@ -1,4 +1,4 @@
-# STIG Manager with CAC Authentication
+# STIG Manager with proxy for https - No CAC
 
 version: '3.7'
 
@@ -11,29 +11,34 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./certs/localhost/localhost.crt:/etc/nginx/cert.pem
       - ./certs/localhost/localhost.key:/etc/nginx/privkey.pem
-      - ./certs/dod/Certificates_PKCS7_v5.9_DoD.pem.pem:/etc/nginx/dod-certs.pem
+      # - ./certs/dod/Certificates_PKCS7_v5.9_DoD.pem.pem:/etc/nginx/dod-certs.pem
       - ./nginx/index.html:/usr/share/nginx/html/index.html
     ports:
     - "443:443"
   keycloak:
-    image: quay.io/keycloak/keycloak:19.0.2
+    image: stig-manager-auth:26.0.7
+    # image: nuwcdivnpt/stig-manager-auth:latest
+    # image: quay.io/keycloak/keycloak:19.0.2
     # alternative image from Ironbank
     # image: registry1.dso.mil/ironbank/opensource/keycloak/keycloak:19.0.2
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=Pa55w0rd
-      - KC_PROXY=edge
-      - KC_HOSTNAME_URL=https://localhost/kc/
-      - KC_HOSTNAME_ADMIN_URL=https://localhost/kc/
-      - KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx
-      - KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
-      - KC_SPI_TRUSTSTORE_FILE_FILE=/tmp/truststore.p12
-      - KC_SPI_TRUSTSTORE_FILE_PASSWORD=password
-    command: start --import-realm
-    volumes:
-      - ./certs/dod/Certificates_PKCS7_v5.9_DoD.pem.p12:/tmp/truststore.p12
-      - ./kc/stigman_realm.json:/opt/keycloak/data/import/stigman_realm.json
-      - ./kc/create-x509-user.jar:/opt/keycloak/providers/create-x509-user.jar
+      # - KEYCLOAK_ADMIN=admin
+      # - KEYCLOAK_ADMIN_PASSWORD=Pa55w0rd
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_HOSTNAME_STRICT=false
+      # - KC_HOSTNAME_URL=https://localhost/kc
+      # - KC_HOSTNAME_ADMIN_URL=https://localhost/kc
+      - KC_HTTP_RELATIVE_PATH=/kc
+      # - KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx
+      # - KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
+      # - KC_SPI_TRUSTSTORE_FILE_FILE=/tmp/truststore.p12
+      # - KC_SPI_TRUSTSTORE_FILE_PASSWORD=password
+    # command: start-dev
+    # command: start --import-realm
+    # volumes:
+      # - ./certs/dod/Certificates_PKCS7_v5.9_DoD.pem.p12:/tmp/truststore.p12
+      # - ./kc/stigman_realm.json:/opt/keycloak/data/import/stigman_realm.json
+      # - ./kc/create-x509-user.jar:/opt/keycloak/providers/create-x509-user.jar
       # uncomment below to persist Keycloak data
       # - ./kc/h2:/opt/keycloak/data/h2
   stigman:
@@ -41,7 +46,7 @@ services:
     # alternative image based on Ironbank Node.js
     # image: nuwcdivnpt/stig-manager:latest-ironbank
     environment:
-      - STIGMAN_OIDC_PROVIDER=http://keycloak:8080/realms/stigman
+      - STIGMAN_OIDC_PROVIDER=http://keycloak:8080/kc/realms/stigman
       - STIGMAN_CLIENT_OIDC_PROVIDER=https://localhost/kc/realms/stigman
       - STIGMAN_CLASSIFICATION=U
       - STIGMAN_DB_HOST=mysql
@@ -51,15 +56,15 @@ services:
   mysql:
     image: mysql:8.0.38
     # alternative image from Ironbank
-    # image: registry1.dso.mil/ironbank/opensource/mysql/mysql8:8.0.31
-    command: --innodb-buffer-pool-size=512M --sort_buffer_size=64M 
+    # image: registry1.dso.mil/ironbank/opensource/mysql/mysql8:8.0.38
+    command: --innodb-buffer-pool-size=1024M --sort_buffer_size=16M 
     environment:
       - MYSQL_ROOT_PASSWORD=rootpw
       - MYSQL_USER=stigman
       - MYSQL_DATABASE=stigman
       - MYSQL_PASSWORD=stigmanpw
     # uncomment below to persist MySQL data
-    # volumes:
-    #   - ./mysql-data:/var/lib/mysql
+    volumes:
+      - ./mysql-data:/var/lib/mysql
 
     
