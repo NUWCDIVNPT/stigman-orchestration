@@ -1,9 +1,8 @@
 #!/bin/bash
 
 file_in=$1
-file_base="${file_in%.*}"
 
-# First convert from DER to PEM format
+# Change pem.p7b to .pem format
 # provide filename, ie: Certificates_PKCS7_v5_14_DoD.pem.p7b
 
 openssl pkcs7 -print_certs -in $file_in -out DoD_Root_CAs.pem
