@@ -27,11 +27,8 @@ services:
       - KC_HOSTNAME_ADMIN_URL=https://localhost/kc/
       - KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx
       - KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
-      - KC_SPI_X509CERT_LOOKUP_NGINX_CERTIFICATE_CHAIN_VERIFICATION=true
-      - KC_SPI_X509CERT_LOOKUP_NGINX_TRUSTSTORE_FILE=/tmp/truststore.p12
-      - KC_SPI_X509CERT_LOOKUP_NGINX_TRUSTSTORE_PASSWORD=password      
-      # - KC_SPI_TRUSTSTORE_FILE_FILE=/tmp/truststore.p12
-      # - KC_SPI_TRUSTSTORE_FILE_PASSWORD=password
+      - KC_SPI_TRUSTSTORE_FILE_FILE=/tmp/truststore.p12
+      - KC_SPI_TRUSTSTORE_FILE_PASSWORD=password
     command: start --import-realm
     volumes:
       - ./certs/dod/DoD_Root_CAs.p12:/tmp/truststore.p12
