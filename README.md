@@ -84,7 +84,7 @@ docker-compose down
 
 ### Nginx
 
-Client certificate authentication is **required** for access to the Keycloak authorization endpoint. Client certificate authentication is **optional** for API endpoints since access to the API is controlled by OAuth2 tokens.
+Client certificate authentication is **required** for access to the Keycloak authorization endpoint. Nginx will forward the client certificate information to Keycloak in the `ssl-client-cert` header. Client certificate authentication is **optional** for API endpoints since access to the API is controlled by OAuth2 tokens.
 
 Nginx requires a PEM file containing certificates for the DoD Root CA and Intermediate CAs used to sign CAC certificates. 
 
@@ -104,13 +104,8 @@ The environment variables `STIGMAN_OIDC_PROVIDER` and `STIGMAN_CLIENT_OIDC_PROVI
 During startup, Keycloak imports a [realm configuration file](kc/stigman_realm.json) which includes the `X.509 Browser` Authentication Flow to support X.509 certificate mapping. [This Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/#_x509) describes how to configure authentication flows to include X.509 client certificates.
 
 
-The example uses a custom provider [modified from this project](https://github.com/lscorcia/keycloak-cns-authenticator/) that extends the built-in X.509 authenticator. The custom provider will create a new user account if a certificate cannot be mapped to an existing account. The provider file is `kc/create-x509-user.jar` which is mounted to the Keycloak container at `/opt/keycloak/providers`.
+The example uses a custom provider [modified from this project](https://github.com/lscorcia/keycloak-cns-authenticator/) that extends the built-in X.509 authenticator. The custom provider will create a new user account if a certificate cannot be mapped to an existing account. The provider file is `kc/create-x509-user.jar` which is mounted to the Keycloak container at `/opt/keycloak/providers`. Keycloak will trust the Nginx certificate validation, and use the certificate's CN field as the username.
 
-#### Keycloak keystores
-
-Keycloak behind Nginx requires a keystore that contains certificates for the DoD Root CA and Intermediate CAs used to sign CAC certificates. 
-
-> The example provides the file `certs/dod/Certificates_PKCS7_v5.9_DoD.pem.p12` for this purpose, which is mounted to the Keycloak container at `/tmp/truststore.p12`
 
 ## Notes
 ### To clear Chrome HSTS entry (for localhost, perhaps)
