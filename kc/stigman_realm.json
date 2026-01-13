@@ -1591,8 +1591,7 @@
       "userSetupAllowed" : false,
       "autheticatorFlow" : false
     }, {
-      "authenticatorConfig" : "create-user",
-      "authenticator" : "auth-x509-client-create-form",
+      "authenticator" : "x509-create-user",
       "authenticatorFlow" : false,
       "requirement" : "ALTERNATIVE",
       "priority" : 30,

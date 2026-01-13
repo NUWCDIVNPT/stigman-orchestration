@@ -16,25 +16,30 @@ services:
     ports:
     - "443:443"
   keycloak:
-    image: quay.io/keycloak/keycloak:19.0.2
+    image: quay.io/keycloak/keycloak:26.5.0
     # alternative image from Ironbank
-    # image: registry1.dso.mil/ironbank/opensource/keycloak/keycloak:19.0.2
+    # image: registry1.dso.mil/ironbank/opensource/keycloak/keycloak:26.1.0
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=Pa55w0rd
-      - KC_PROXY=edge
-      - KC_HOSTNAME_URL=https://localhost/kc/
-      - KC_HOSTNAME_ADMIN_URL=https://localhost/kc/
+      # Keycloak 26 proxy settings (KC_PROXY=edge is deprecated)
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME=https://localhost/kc
+      - KC_HOSTNAME_ADMIN=https://localhost/kc
+      # Enable dynamic backchannel so internal services can reach Keycloak via http://keycloak:8080
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+      # X509 certificate lookup from nginx header
       - KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx
       - KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
     command: start --import-realm
     volumes:
       - ./kc/stigman_realm.json:/opt/keycloak/data/import/stigman_realm.json
-      - ./kc/create-x509-user.jar:/opt/keycloak/providers/create-x509-user.jar
+      - ./kc-x509-create-user/target/x509-create-user.jar:/opt/keycloak/providers/x509-create-user.jar
       # uncomment below to persist Keycloak data
       # - ./kc/h2:/opt/keycloak/data/h2
   stigman:
-    image: nuwcdivnpt/stig-manager:latest
+    image: nuwcdivnpt/stig-manager:1.6.0
     # alternative image based on Ironbank Node.js
     # image: nuwcdivnpt/stig-manager:latest-ironbank
     environment:
@@ -46,7 +51,7 @@ services:
       - STIGMAN_DB_PASSWORD=stigmanpw
     init: true
   mysql:
-    image: mysql:8.0.38
+    image: mysql:8.4.4
     # alternative image from Ironbank
     # image: registry1.dso.mil/ironbank/opensource/mysql/mysql8:8.0.31
     command: --innodb-buffer-pool-size=512M --sort_buffer_size=64M 
