@@ -47,19 +47,6 @@
   "failureFactor" : 30,
   "roles" : {
     "realm" : [ {
-      "id" : "06fd31ee-9069-433f-9ce4-f721bb6c1b9a",
-      "name" : "user",
-      "description" : "User privileges",
-      "composite" : true,
-      "composites" : {
-        "client" : {
-          "realm-management" : [ "view-users" ]
-        }
-      },
-      "clientRole" : false,
-      "containerId" : "stigman",
-      "attributes" : { }
-    }, {
       "id" : "ce11ada3-03d7-4ea2-923d-3a6b94a92b74",
       "name" : "create_collection",
       "description" : "Privilege granting permission to create Collections",
@@ -454,14 +441,8 @@
     "groups" : [ ]
   }],
   "scopeMappings" : [ {
-    "clientScope" : "stig-manager:collection",
-    "roles" : [ "user" ]
-  }, {
     "clientScope" : "stig-manager",
     "roles" : [ "admin" ]
-  }, {
-    "clientScope" : "stig-manager:collection:read",
-    "roles" : [ "user" ]
   }, {
     "clientScope" : "offline_access",
     "roles" : [ "offline_access" ]
@@ -469,17 +450,8 @@
     "clientScope" : "stig-manager:stig",
     "roles" : [ "admin" ]
   }, {
-    "clientScope" : "stig-manager:stig:read",
-    "roles" : [ "user" ]
-  }, {
-    "clientScope" : "stig-manager:user:read",
-    "roles" : [ "user" ]
-  }, {
     "clientScope" : "stig-manager:op",
     "roles" : [ "admin" ]
-  }, {
-    "clientScope" : "stig-manager:op:read",
-    "roles" : [ "user" ]
   }, {
     "clientScope" : "stig-manager:user",
     "roles" : [ "admin" ]
@@ -744,8 +716,8 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "defaultClientScopes" : [ "profile", "roles" ],
-    "optionalClientScopes" : [ "stig-manager:stig:read", "stig-manager:user:read", "stig-manager:collection:read", "stig-manager:collection", "stig-manager:op:read", "stig-manager:user", "stig-manager:stig", "stig-manager", "stig-manager:op" ]
+    "defaultClientScopes" : [ "profile", "roles", "stig-manager:stig:read", "stig-manager:user:read", "stig-manager:collection:read", "stig-manager:collection", "stig-manager:op:read" ],
+    "optionalClientScopes" : [ "stig-manager", "stig-manager:stig", "stig-manager:user", "stig-manager:op" ]
   }, {
     "id" : "65185464-a36d-4e2e-9330-748733597b33",
     "clientId" : "stigman-watcher",
