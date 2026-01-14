@@ -5,7 +5,6 @@ import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
-import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
@@ -32,18 +31,15 @@ public class X509CreateUserAuthenticator implements Authenticator {
     private static final Logger LOG = Logger.getLogger(X509CreateUserAuthenticator.class);
 
     // Pattern to extract CN from X.500 Distinguished Name
-    // Handles both "CN=Name" and "CN=Name," formats, including quoted values
     private static final Pattern CN_PATTERN = Pattern.compile("CN=(?:\"([^\"]+)\"|([^,]+))", Pattern.CASE_INSENSITIVE);
 
     // Auth session note keys
     private static final String AUTH_NOTE_IS_NEW_USER = "x509.isNewUser";
     private static final String AUTH_NOTE_USERNAME = "x509.username";
-    private static final String AUTH_NOTE_CERTIFICATE_CN = "x509.certificateCN";
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
         // Get the X509 certificate lookup provider configured for this Keycloak instance
-        // This respects KC_SPI_X509CERT_LOOKUP_PROVIDER setting (e.g., "nginx")
         X509ClientCertificateLookup lookup = context.getSession()
                 .getProvider(X509ClientCertificateLookup.class);
 
@@ -98,12 +94,11 @@ public class X509CreateUserAuthenticator implements Authenticator {
                 user.setEnabled(true);
                 isNewUser = true;
 
-                // Assign default realm roles
+                // Assign the realm's default roles to the new user
                 RoleModel defaultRole = realm.getDefaultRole();
                 if (defaultRole != null) {
                     user.grantRole(defaultRole);
-                    LOG.debugf("Assigned default role '%s' to user '%s'",
-                              defaultRole.getName(), username);
+                    LOG.debugf("Assigned default role '%s' to user '%s'", defaultRole.getName(), username);
                 }
 
                 LOG.infof("Successfully created user '%s'", username);
@@ -129,41 +124,17 @@ public class X509CreateUserAuthenticator implements Authenticator {
         // Store state in auth session for the confirmation page
         context.getAuthenticationSession().setAuthNote(AUTH_NOTE_IS_NEW_USER, String.valueOf(isNewUser));
         context.getAuthenticationSession().setAuthNote(AUTH_NOTE_USERNAME, username);
-        context.getAuthenticationSession().setAuthNote(AUTH_NOTE_CERTIFICATE_CN, username);
 
         // Show confirmation page
-        Response challenge = createConfirmationForm(context, isNewUser, username);
+        Response challenge = context.form()
+                .setAttribute("isNewUser", isNewUser)
+                .setAttribute("username", username)
+                .createForm("x509-confirm.ftl");
         context.challenge(challenge);
     }
 
     /**
-     * Creates the confirmation form to show to the user.
-     */
-    private Response createConfirmationForm(AuthenticationFlowContext context, boolean isNewUser, String username) {
-        LoginFormsProvider form = context.form()
-                .setAttribute("isNewUser", isNewUser)
-                .setAttribute("username", username)
-                .setAttribute("certificateCN", username);
-
-        return form.createForm("x509-confirm.ftl");
-    }
-
-    @Override
-    public void action(AuthenticationFlowContext context) {
-        // User clicked Continue on the confirmation form
-        String username = context.getAuthenticationSession().getAuthNote(AUTH_NOTE_USERNAME);
-        LOG.infof("User confirmed authentication for '%s'", username);
-
-        // Complete authentication
-        context.success();
-        LOG.infof("Successfully authenticated user '%s' via X.509 certificate", username);
-    }
-
-    /**
      * Extracts the Common Name (CN) from an X.509 certificate's subject.
-     *
-     * @param cert The X.509 certificate
-     * @return The CN value, or null if not found
      */
     private String extractCommonName(X509Certificate cert) {
         X500Principal principal = cert.getSubjectX500Principal();
@@ -171,36 +142,37 @@ public class X509CreateUserAuthenticator implements Authenticator {
 
         Matcher matcher = CN_PATTERN.matcher(dn);
         if (matcher.find()) {
-            // Group 1 is quoted value, Group 2 is unquoted value
             String cn = matcher.group(1);
             if (cn == null) {
                 cn = matcher.group(2);
             }
             return cn;
         }
-
         return null;
     }
 
     @Override
+    public void action(AuthenticationFlowContext context) {
+        String username = context.getAuthenticationSession().getAuthNote(AUTH_NOTE_USERNAME);
+        LOG.infof("User confirmed authentication for '%s'", username);
+        context.success();
+    }
+
+    @Override
     public boolean requiresUser() {
-        // We find/create the user ourselves
         return false;
     }
 
     @Override
     public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
-        // Always configured - no user-specific setup required
         return true;
     }
 
     @Override
     public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
-        // No required actions for X.509 authentication
     }
 
     @Override
     public void close() {
-        // Nothing to clean up
     }
 }

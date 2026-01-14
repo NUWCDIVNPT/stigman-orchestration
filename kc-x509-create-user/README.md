@@ -10,6 +10,7 @@ This plugin extends Keycloak's authentication capabilities to:
 2. Look up an existing user by that username
 3. **Automatically create a new user** if one doesn't exist
 4. Assign the realm's default roles to new users
+5. Show a confirmation page before completing authentication
 
 This is designed for CAC (Common Access Card) authentication scenarios where users should be provisioned on first login.
 
@@ -81,9 +82,9 @@ KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
    - Retrieves the certificate via Keycloak's X509ClientCertificateLookup SPI
    - Extracts the CN from the certificate subject
    - Looks up a user by that username
-   - Creates a new user if not found
-   - Grants the realm's default roles to new users
-   - Completes authentication
+   - Creates a new user if not found (with realm's default roles)
+   - Shows a confirmation page ("Account Created" or "Welcome Back")
+   - User clicks Continue to complete authentication
 
 ## Logging
 

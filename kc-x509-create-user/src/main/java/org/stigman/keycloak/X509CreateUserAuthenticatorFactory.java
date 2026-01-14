@@ -19,10 +19,6 @@ import java.util.List;
  */
 public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory {
 
-    /**
-     * Unique identifier for this authenticator provider.
-     * This ID is referenced in realm configuration JSON files.
-     */
     public static final String PROVIDER_ID = "x509-create-user";
 
     private static final X509CreateUserAuthenticator SINGLETON = new X509CreateUserAuthenticator();
@@ -40,8 +36,9 @@ public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory 
     @Override
     public String getHelpText() {
         return "Authenticates users via X.509 client certificates (e.g., CAC/PIV). " +
-               "Automatically creates a new user account if the certificate's Common Name (CN) " +
-               "doesn't match an existing user. New users are assigned the realm's default roles.";
+               "Automatically creates a new user account using the certificate's CN " +
+               "if one doesn't exist. New users are assigned the realm's default roles. " +
+               "Shows a confirmation page before completing login.";
     }
 
     @Override
@@ -65,10 +62,6 @@ public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory 
 
     @Override
     public boolean isConfigurable() {
-        // No configuration options currently - could add options for:
-        // - Which certificate field to use as username (CN, email, UPN, etc.)
-        // - Whether to auto-create users or just authenticate existing
-        // - Additional attributes to extract from certificate
         return false;
     }
 
@@ -84,16 +77,13 @@ public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory 
 
     @Override
     public void init(Config.Scope config) {
-        // No initialization needed
     }
 
     @Override
     public void postInit(KeycloakSessionFactory factory) {
-        // No post-initialization needed
     }
 
     @Override
     public void close() {
-        // No cleanup needed
     }
 }
