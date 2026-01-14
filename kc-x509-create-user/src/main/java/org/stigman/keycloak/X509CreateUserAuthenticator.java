@@ -1,9 +1,11 @@
 package org.stigman.keycloak;
 
+import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
+import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
@@ -22,6 +24,8 @@ import java.util.regex.Pattern;
  * The authenticator extracts the Common Name (CN) from the certificate's subject
  * and uses it as the username. If no user exists with that username, a new user
  * is created and assigned the realm's default roles.
+ *
+ * A confirmation page is shown to the user before completing authentication.
  */
 public class X509CreateUserAuthenticator implements Authenticator {
 
@@ -30,6 +34,11 @@ public class X509CreateUserAuthenticator implements Authenticator {
     // Pattern to extract CN from X.500 Distinguished Name
     // Handles both "CN=Name" and "CN=Name," formats, including quoted values
     private static final Pattern CN_PATTERN = Pattern.compile("CN=(?:\"([^\"]+)\"|([^,]+))", Pattern.CASE_INSENSITIVE);
+
+    // Auth session note keys
+    private static final String AUTH_NOTE_IS_NEW_USER = "x509.isNewUser";
+    private static final String AUTH_NOTE_USERNAME = "x509.username";
+    private static final String AUTH_NOTE_CERTIFICATE_CN = "x509.certificateCN";
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
@@ -79,6 +88,7 @@ public class X509CreateUserAuthenticator implements Authenticator {
 
         // Look up existing user by username
         UserModel user = session.users().getUserByUsername(realm, username);
+        boolean isNewUser = false;
 
         if (user == null) {
             // Create new user
@@ -86,6 +96,7 @@ public class X509CreateUserAuthenticator implements Authenticator {
             try {
                 user = session.users().addUser(realm, username);
                 user.setEnabled(true);
+                isNewUser = true;
 
                 // Assign default realm roles
                 RoleModel defaultRole = realm.getDefaultRole();
@@ -112,8 +123,38 @@ public class X509CreateUserAuthenticator implements Authenticator {
             return;
         }
 
-        // Authentication successful
+        // Set user in context
         context.setUser(user);
+
+        // Store state in auth session for the confirmation page
+        context.getAuthenticationSession().setAuthNote(AUTH_NOTE_IS_NEW_USER, String.valueOf(isNewUser));
+        context.getAuthenticationSession().setAuthNote(AUTH_NOTE_USERNAME, username);
+        context.getAuthenticationSession().setAuthNote(AUTH_NOTE_CERTIFICATE_CN, username);
+
+        // Show confirmation page
+        Response challenge = createConfirmationForm(context, isNewUser, username);
+        context.challenge(challenge);
+    }
+
+    /**
+     * Creates the confirmation form to show to the user.
+     */
+    private Response createConfirmationForm(AuthenticationFlowContext context, boolean isNewUser, String username) {
+        LoginFormsProvider form = context.form()
+                .setAttribute("isNewUser", isNewUser)
+                .setAttribute("username", username)
+                .setAttribute("certificateCN", username);
+
+        return form.createForm("x509-confirm.ftl");
+    }
+
+    @Override
+    public void action(AuthenticationFlowContext context) {
+        // User clicked Continue on the confirmation form
+        String username = context.getAuthenticationSession().getAuthNote(AUTH_NOTE_USERNAME);
+        LOG.infof("User confirmed authentication for '%s'", username);
+
+        // Complete authentication
         context.success();
         LOG.infof("Successfully authenticated user '%s' via X.509 certificate", username);
     }
@@ -139,11 +180,6 @@ public class X509CreateUserAuthenticator implements Authenticator {
         }
 
         return null;
-    }
-
-    @Override
-    public void action(AuthenticationFlowContext context) {
-        // No form action needed - this authenticator doesn't present a form
     }
 
     @Override
