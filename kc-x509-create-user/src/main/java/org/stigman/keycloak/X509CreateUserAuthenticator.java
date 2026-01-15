@@ -136,12 +136,37 @@ public class X509CreateUserAuthenticator implements Authenticator {
      * using BouncyCastle's ASN.1 parsing.
      */
     private String extractCommonName(X509Certificate cert) {
-        X500Name x500name = new X500Name(cert.getSubjectX500Principal().getName());
-        RDN[] rdns = x500name.getRDNs(BCStyle.CN);
-        if (rdns.length > 0) {
-            return IETFUtils.valueToString(rdns[0].getFirst().getValue());
+        if (cert == null) {
+            LOG.warn("Certificate is null");
+            return null;
         }
-        return null;
+
+        var principal = cert.getSubjectX500Principal();
+        if (principal == null) {
+            LOG.warn("Certificate subject principal is null");
+            return null;
+        }
+
+        String dn = principal.getName();
+        if (dn == null || dn.isEmpty()) {
+            LOG.warn("Certificate distinguished name is null or empty");
+            return null;
+        }
+
+        X500Name x500name = new X500Name(dn);
+        RDN[] rdns = x500name.getRDNs(BCStyle.CN);
+        if (rdns == null || rdns.length == 0) {
+            LOG.debug("No CN found in certificate subject");
+            return null;
+        }
+
+        var firstRdn = rdns[0].getFirst();
+        if (firstRdn == null || firstRdn.getValue() == null) {
+            LOG.warn("CN RDN value is null");
+            return null;
+        }
+
+        return IETFUtils.valueToString(firstRdn.getValue());
     }
 
     /**
