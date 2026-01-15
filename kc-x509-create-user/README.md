@@ -108,6 +108,40 @@ The authenticator logs to the `org.stigman.keycloak.X509CreateUserAuthenticator`
 - **WARN**: Missing CN, disabled users
 - **ERROR**: Certificate retrieval failures
 
+## Production Considerations
+
+This plugin is designed to streamline demo/testing scenarios. For production use, evaluate the following:
+
+### Auto-User Creation
+
+Automatically creating users from certificates may not align with enterprise security policies. Consider:
+
+- **Pre-provisioning users** via LDAP federation, SCIM, or Keycloak's User API
+- **Disabling this plugin** and using Keycloak's built-in X.509 authenticator (requires users to exist)
+- **Modifying the plugin** to validate against an allowlist before creating users
+
+### Role Assignment
+
+The default configuration grants `admin` and `create_collection` roles to all new users. For production:
+
+1. **Disable both role options** in the authenticator config
+2. **Assign roles manually** via Keycloak Admin Console or API
+3. **Use Keycloak groups** for role-based access control at scale
+
+### Username Mapping
+
+The plugin extracts the certificate's Common Name (CN) as the username. Your organization may require:
+
+- **Different certificate fields**: UPN, email, or custom OID
+- **Username transformations**: Stripping domain prefixes, normalizing case
+- **Validation**: Ensuring usernames match enterprise directory entries
+
+To customize, modify the `extractCommonName()` method in `X509CreateUserAuthenticator.java`.
+
+### Realm vs Client Roles
+
+This plugin assigns **realm roles** (`admin`, `create_collection`). If your Keycloak realm hosts multiple applications, consider using **client roles** instead to avoid permission conflicts. This would require modifying the plugin to look up roles from the client rather than the realm.
+
 ## Customization
 
 The current implementation uses the certificate's CN as the username. To modify this behavior (e.g., use email, UPN, or apply transformations), edit the `extractCommonName()` method in `X509CreateUserAuthenticator.java`.
