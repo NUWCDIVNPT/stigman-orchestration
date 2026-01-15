@@ -5,16 +5,21 @@ import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
+import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
+
+import java.util.Map;
 import org.keycloak.services.x509.X509ClientCertificateLookup;
 
-import javax.security.auth.x500.X500Principal;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+
 import java.security.cert.X509Certificate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Custom Keycloak authenticator that authenticates users via X.509 client certificates
@@ -22,16 +27,13 @@ import java.util.regex.Pattern;
  *
  * The authenticator extracts the Common Name (CN) from the certificate's subject
  * and uses it as the username. If no user exists with that username, a new user
- * is created and assigned the realm's default roles.
+ * is created and assigned roles based on the authenticator configuration.
  *
  * A confirmation page is shown to the user before completing authentication.
  */
 public class X509CreateUserAuthenticator implements Authenticator {
 
     private static final Logger LOG = Logger.getLogger(X509CreateUserAuthenticator.class);
-
-    // Pattern to extract CN from X.500 Distinguished Name
-    private static final Pattern CN_PATTERN = Pattern.compile("CN=(?:\"([^\"]+)\"|([^,]+))", Pattern.CASE_INSENSITIVE);
 
     // Auth session note keys
     private static final String AUTH_NOTE_IS_NEW_USER = "x509.isNewUser";
@@ -94,12 +96,8 @@ public class X509CreateUserAuthenticator implements Authenticator {
                 user.setEnabled(true);
                 isNewUser = true;
 
-                // Assign the realm's default roles to the new user
-                RoleModel defaultRole = realm.getDefaultRole();
-                if (defaultRole != null) {
-                    user.grantRole(defaultRole);
-                    LOG.debugf("Assigned default role '%s' to user '%s'", defaultRole.getName(), username);
-                }
+                // Assign roles based on authenticator configuration
+                assignConfiguredRoles(context, realm, user, username);
 
                 LOG.infof("Successfully created user '%s'", username);
             } catch (Exception e) {
@@ -134,21 +132,55 @@ public class X509CreateUserAuthenticator implements Authenticator {
     }
 
     /**
-     * Extracts the Common Name (CN) from an X.509 certificate's subject.
+     * Extracts the Common Name (CN) from an X.509 certificate's subject
+     * using BouncyCastle's ASN.1 parsing.
      */
     private String extractCommonName(X509Certificate cert) {
-        X500Principal principal = cert.getSubjectX500Principal();
-        String dn = principal.getName(X500Principal.RFC2253);
-
-        Matcher matcher = CN_PATTERN.matcher(dn);
-        if (matcher.find()) {
-            String cn = matcher.group(1);
-            if (cn == null) {
-                cn = matcher.group(2);
-            }
-            return cn;
+        X500Name x500name = new X500Name(cert.getSubjectX500Principal().getName());
+        RDN[] rdns = x500name.getRDNs(BCStyle.CN);
+        if (rdns.length > 0) {
+            return IETFUtils.valueToString(rdns[0].getFirst().getValue());
         }
         return null;
+    }
+
+    /**
+     * Assigns roles to a newly created user based on authenticator configuration.
+     */
+    private void assignConfiguredRoles(AuthenticationFlowContext context, RealmModel realm,
+                                       UserModel user, String username) {
+        AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+        if (config == null) {
+            LOG.debug("No authenticator config found, skipping role assignment");
+            return;
+        }
+
+        Map<String, String> configMap = config.getConfig();
+        if (configMap == null) {
+            return;
+        }
+
+        // Check if admin role should be granted
+        if ("true".equals(configMap.get(X509CreateUserAuthenticatorFactory.CONFIG_GRANT_ADMIN))) {
+            RoleModel adminRole = realm.getRole("admin");
+            if (adminRole != null) {
+                user.grantRole(adminRole);
+                LOG.debugf("Assigned 'admin' role to user '%s'", username);
+            } else {
+                LOG.warn("'admin' role not found in realm, cannot assign to user");
+            }
+        }
+
+        // Check if create_collection role should be granted
+        if ("true".equals(configMap.get(X509CreateUserAuthenticatorFactory.CONFIG_GRANT_CREATE_COLLECTION))) {
+            RoleModel createCollectionRole = realm.getRole("create_collection");
+            if (createCollectionRole != null) {
+                user.grantRole(createCollectionRole);
+                LOG.debugf("Assigned 'create_collection' role to user '%s'", username);
+            } else {
+                LOG.warn("'create_collection' role not found in realm, cannot assign to user");
+            }
+        }
     }
 
     @Override

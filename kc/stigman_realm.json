@@ -60,7 +60,6 @@
       "description" : "${role_default-roles}",
       "composite" : true,
       "composites" : {
-        "realm" : [ "create_collection", "admin" ],
         "client" : {
           "realm-management" : [ "view-users" ],
           "account" : [ "view-profile", "manage-account" ]
@@ -1563,6 +1562,7 @@
       "userSetupAllowed" : false,
       "autheticatorFlow" : false
     }, {
+      "authenticatorConfig" : "x509-create-user-config",
       "authenticator" : "x509-create-user",
       "authenticatorFlow" : false,
       "requirement" : "ALTERNATIVE",
@@ -2005,6 +2005,13 @@
     } ]
   } ],
   "authenticatorConfig" : [ {
+    "id" : "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "alias" : "x509-create-user-config",
+    "config" : {
+      "grantAdminRole" : "true",
+      "grantCreateCollectionRole" : "true"
+    }
+  }, {
     "id" : "42f48ba4-09c5-4f78-b3fe-a894551a6bb2",
     "alias" : "create-user",
     "config" : {

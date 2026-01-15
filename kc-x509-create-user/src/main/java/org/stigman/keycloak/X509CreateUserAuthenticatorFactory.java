@@ -8,7 +8,6 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.provider.ProviderConfigProperty;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,7 +20,31 @@ public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory 
 
     public static final String PROVIDER_ID = "x509-create-user";
 
+    // Configuration property names
+    public static final String CONFIG_GRANT_ADMIN = "grantAdminRole";
+    public static final String CONFIG_GRANT_CREATE_COLLECTION = "grantCreateCollectionRole";
+
     private static final X509CreateUserAuthenticator SINGLETON = new X509CreateUserAuthenticator();
+
+    private static final List<ProviderConfigProperty> CONFIG_PROPERTIES;
+
+    static {
+        ProviderConfigProperty grantAdmin = new ProviderConfigProperty();
+        grantAdmin.setName(CONFIG_GRANT_ADMIN);
+        grantAdmin.setLabel("Grant 'admin' role");
+        grantAdmin.setHelpText("Assign the 'admin' role to newly created users, granting administrative privileges.");
+        grantAdmin.setType(ProviderConfigProperty.BOOLEAN_TYPE);
+        grantAdmin.setDefaultValue("true");
+
+        ProviderConfigProperty grantCreateCollection = new ProviderConfigProperty();
+        grantCreateCollection.setName(CONFIG_GRANT_CREATE_COLLECTION);
+        grantCreateCollection.setLabel("Grant 'create_collection' role");
+        grantCreateCollection.setHelpText("Assign the 'create_collection' role to newly created users, allowing them to create new Collections.");
+        grantCreateCollection.setType(ProviderConfigProperty.BOOLEAN_TYPE);
+        grantCreateCollection.setDefaultValue("true");
+
+        CONFIG_PROPERTIES = List.of(grantAdmin, grantCreateCollection);
+    }
 
     @Override
     public String getId() {
@@ -37,7 +60,7 @@ public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory 
     public String getHelpText() {
         return "Authenticates users via X.509 client certificates (e.g., CAC/PIV). " +
                "Automatically creates a new user account using the certificate's CN " +
-               "if one doesn't exist. New users are assigned the realm's default roles. " +
+               "if one doesn't exist. New users can be assigned configurable roles. " +
                "Shows a confirmation page before completing login.";
     }
 
@@ -62,7 +85,7 @@ public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory 
 
     @Override
     public boolean isConfigurable() {
-        return false;
+        return true;
     }
 
     @Override
@@ -72,7 +95,7 @@ public class X509CreateUserAuthenticatorFactory implements AuthenticatorFactory 
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return Collections.emptyList();
+        return CONFIG_PROPERTIES;
     }
 
     @Override

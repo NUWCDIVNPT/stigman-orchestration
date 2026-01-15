@@ -9,7 +9,7 @@ This plugin extends Keycloak's authentication capabilities to:
 1. Extract the Common Name (CN) from a client X.509 certificate
 2. Look up an existing user by that username
 3. **Automatically create a new user** if one doesn't exist
-4. Assign the realm's default roles to new users
+4. Assign configurable roles to new users (`admin`, `create_collection`, both, or neither)
 5. Show a confirmation page before completing authentication
 
 This is designed for CAC (Common Access Card) authentication scenarios where users should be provisioned on first login.
@@ -73,6 +73,19 @@ KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx
 KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
 ```
 
+### Role Assignment
+
+After adding the authenticator to your flow, click the gear icon (⚙️) to configure role assignment for new users:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| **Grant 'admin' role** | Assign the `admin` role to newly created users, granting administrative privileges | `true` |
+| **Grant 'create_collection' role** | Assign the `create_collection` role to newly created users, allowing them to create new Collections | `true` |
+
+**Demo mode:** Both options enabled (all users get full access)
+
+**Production mode:** Disable both options, then manually assign roles to specific users via Keycloak Admin Console (Users → Role Mappings)
+
 ## How It Works
 
 1. When a user accesses a protected resource, the browser sends the client certificate
@@ -82,7 +95,7 @@ KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
    - Retrieves the certificate via Keycloak's X509ClientCertificateLookup SPI
    - Extracts the CN from the certificate subject
    - Looks up a user by that username
-   - Creates a new user if not found (with realm's default roles)
+   - Creates a new user if not found (with configured roles)
    - Shows a confirmation page ("Account Created" or "Welcome Back")
    - User clicks Continue to complete authentication
 

@@ -53,6 +53,12 @@
             <artifactId>keycloak-services</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- BouncyCastle for X.509 certificate parsing (provided by Keycloak) -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -110,7 +110,7 @@ The example includes a [custom authenticator plugin](kc-x509-create-user/) that 
 
 - Extracts the Common Name (CN) from the client certificate as the username
 - Automatically creates a new user account if the username doesn't exist
-- Assigns the realm's default roles to new users, **granting them STIG Manager Administrator and Collection Creator privileges**
+- Assigns configurable roles to new users (by default, **grants STIG Manager Administrator and Collection Creator privileges**)
 - Displays a confirmation page showing "Account Created" or "Welcome Back" before completing authentication
 
 The provider JAR is built from source in `kc-x509-create-user/` and mounted to the Keycloak container at `/opt/keycloak/providers`. Keycloak trusts the Nginx certificate validation.
