@@ -116,6 +116,52 @@ The example includes a [custom authenticator plugin](kc-x509-create-user/) that 
 The provider JAR is built from source in `kc-x509-create-user/` and mounted to the Keycloak container at `/opt/keycloak/providers`. Keycloak trusts the Nginx certificate validation.
 
 
+## Production Considerations
+
+This orchestration is designed for **demonstration and testing only**. For production deployments, consider the following changes:
+
+### Security
+
+| Demo Setting | Production Recommendation |
+|--------------|---------------------------|
+| Self-signed `demoCA` certificate | Use certificates from a trusted CA |
+| `localhost` only | Configure proper hostnames and DNS |
+| Keycloak admin password `Pa55w0rd` | Use strong, unique credentials |
+| Keycloak running in dev mode | Run with `start` instead of `start-dev`, configure production database |
+
+### User Provisioning
+
+The custom X.509 authenticator plugin auto-creates users on first login. This is convenient for demos but may not suit production requirements:
+
+| Demo Setting | Production Recommendation |
+|--------------|---------------------------|
+| Auto-create users from certificates | Pre-provision users via LDAP federation, SCIM, or manual creation |
+| Grant `admin` + `create_collection` to all new users | Disable auto-role assignment; manually assign roles to authorized users |
+| Plugin assigns realm roles directly | Consider using Keycloak groups or client roles for more granular control |
+
+To disable auto-role assignment:
+1. Keycloak Admin → Authentication → X.509 Browser flow
+2. Click ⚙️ on "X509 Certificate with Auto User Creation"
+3. Set both "Grant 'admin' role" and "Grant 'create_collection' role" to OFF
+
+### Authentication
+
+| Demo Setting | Production Recommendation |
+|--------------|---------------------------|
+| Auto-create plugin handles all X.509 auth | Integrate with enterprise IdP (ADFS, Okta, Azure AD) via Keycloak identity brokering |
+| Certificate CN used as username | Configure username mapping appropriate for your PKI (may need UPN, email, or custom OID) |
+| Single authentication flow | Configure appropriate flows for different user populations |
+
+### Infrastructure
+
+| Demo Setting | Production Recommendation |
+|--------------|---------------------------|
+| Single nginx container | Load-balanced reverse proxy with HA |
+| MySQL with local volume | Managed database service or clustered MySQL with proper backups |
+| Keycloak with H2/dev database | PostgreSQL or MySQL with Keycloak clustering for HA |
+| All services on single host | Distributed deployment with proper network segmentation |
+
+
 ## Notes
 ### To clear Chrome HSTS entry (for localhost, perhaps)
 
