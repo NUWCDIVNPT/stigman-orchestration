@@ -1,36 +1,60 @@
-# STIG Manager with CAC Authentication
-
-version: '3.7'
+# STIG Manager + Keycloak behind an nginx reverse proxy.
+# Generic localhost dev/test sample. NOT for production.
+#
+# Auth: Keycloak username/password with self-registration, plus OPTIONAL CAC/PIV
+# smartcard login via Keycloak's built-in X.509 authenticator (no custom plugin).
+# See README.md.
 
 services:
   nginx:
-    image: nginx:1.23.1
+    image: nginx:1.27.3
     # alternative image from Ironbank
-    # image: registry1.dso.mil/ironbank/opensource/nginx/nginx:1.23.1
+    # image: registry1.dso.mil/ironbank/opensource/nginx/nginx:1.27.3
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./certs/localhost/localhost.crt:/etc/nginx/cert.pem
       - ./certs/localhost/localhost.key:/etc/nginx/privkey.pem
+      # CA bundle used to validate client (CAC/PIV) certificates. The provided file
+      # is the DoD PKI chain; replace with your own CA(s) as needed.
       - ./certs/dod/DoD_Root_CAs.pem:/etc/nginx/dod-certs.pem
       - ./nginx/index.html:/usr/share/nginx/html/index.html
     ports:
-    - "443:443"
+      - "443:443"
   keycloak:
-    image: quay.io/keycloak/keycloak:19.0.2
+    image: quay.io/keycloak/keycloak:26.6.3
     # alternative image from Ironbank
-    # image: registry1.dso.mil/ironbank/opensource/keycloak/keycloak:19.0.2
+    # image: registry1.dso.mil/ironbank/opensource/keycloak/keycloak:26.6.3
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=Pa55w0rd
-      - KC_PROXY=edge
-      - KC_HOSTNAME_URL=https://localhost/kc/
-      - KC_HOSTNAME_ADMIN_URL=https://localhost/kc/
+      # Initial admin (Keycloak 26 bootstrap admin env vars)
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=Pa55w0rd
+      # Running behind a TLS-terminating reverse proxy (edge termination)
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_HTTP_ENABLED=true
+      # Public base URL, including the /kc subpath the proxy exposes Keycloak on
+      - KC_HOSTNAME=https://localhost/kc
+      # Resolve back-channel URLs (e.g. jwks_uri) dynamically from the request, so the
+      # STIG Manager API reaching Keycloak at http://keycloak:8080 gets internally
+      # reachable endpoints instead of the public https://localhost/kc URLs.
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+      # Let Keycloak read the client certificate forwarded by nginx (for CAC/PIV).
+      # Harmless when no client cert is presented.
       - KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx
       - KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT
+      # Dev convenience: don't cache themes/templates so the login theme can be
+      # edited without rebuilding. Remove for production.
+      - KC_SPI_THEME_CACHE_THEMES=false
+      - KC_SPI_THEME_CACHE_TEMPLATES=false
     command: start --import-realm
     volumes:
       - ./kc/stigman_realm.json:/opt/keycloak/data/import/stigman_realm.json
-      - ./kc/create-x509-user.jar:/opt/keycloak/providers/create-x509-user.jar
+      # Custom login theme (shows the CN to first-time CAC users so they can self-register)
+      - ./kc/themes/stigman:/opt/keycloak/themes/stigman
+      # NOTE: This sample uses Keycloak's BUILT-IN X.509 authenticator. Automatically
+      # creating an account from a certificate requires a custom authenticator provider
+      # (SPI), which is intentionally not included. To add one, mount it here, e.g.:
+      # - ./kc/your-x509-authenticator.jar:/opt/keycloak/providers/your-x509-authenticator.jar
+      #
       # uncomment below to persist Keycloak data
       # - ./kc/h2:/opt/keycloak/data/h2
   stigman:
@@ -38,8 +62,12 @@ services:
     # alternative image based on Ironbank Node.js
     # image: nuwcdivnpt/stig-manager:latest-ironbank
     environment:
+      # Back channel (API -> Keycloak, container network)
       - STIGMAN_OIDC_PROVIDER=http://keycloak:8080/realms/stigman
+      # Front channel (browser -> Keycloak, via the reverse proxy)
       - STIGMAN_CLIENT_OIDC_PROVIDER=https://localhost/kc/realms/stigman
+      # OAuth clientId the web app sends; must match the Client ID in the realm
+      - STIGMAN_CLIENT_ID=stig-manager
       - STIGMAN_CLASSIFICATION=U
       - STIGMAN_DB_HOST=mysql
       - STIGMAN_DB_USER=stigman
@@ -49,7 +77,9 @@ services:
     image: mysql:8.0.38
     # alternative image from Ironbank
     # image: registry1.dso.mil/ironbank/opensource/mysql/mysql8:8.0.31
-    command: --innodb-buffer-pool-size=512M --sort_buffer_size=64M 
+    command: --innodb-buffer-pool-size=512M --sort_buffer_size=64M
+    cap_add:
+      - SYS_NICE  # workaround MySQL logging bug => mbind: Operation not permitted
     environment:
       - MYSQL_ROOT_PASSWORD=rootpw
       - MYSQL_USER=stigman
@@ -57,5 +87,3 @@ services:
       - MYSQL_PASSWORD=stigmanpw
     volumes:
       - ./mysql-data:/var/lib/mysql
-
-    

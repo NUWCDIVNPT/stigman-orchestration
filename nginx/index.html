@@ -1,54 +1,74 @@
 <!DOCTYPE html>
 <html lang="en"><head>
     <meta charset="utf-8">
-    <title>It works</title></head>
-
+    <title>STIG Manager sample &mdash; certificate info</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-
 body {
-    max-width:650px;
+    max-width:720px;
     margin:40px auto;
-    padding:0 10px;
+    padding:0 16px;
     font:18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Arial, "Noto Sans", sans-serif,
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     color:#444;
 }
-
-h1,h2,h3 {
-    line-height:1.2
+h1,h2,h3 { line-height:1.2 }
+code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.cn {
+    display:inline-block; font-size:1.35em; font-weight:bold;
+    padding:6px 12px; margin:6px 0; border:1px solid #bee1f4; background:#e7f5fb;
+    border-radius:6px; user-select:all;
 }
-
+.card { padding:14px 18px; border:1px solid #ddd; border-radius:8px; margin:18px 0; }
+.muted { color:#777; font-size:0.85em; }
+a.button {
+    display:inline-block; margin:4px 8px 4px 0; padding:8px 16px; border-radius:6px;
+    background:#06c; color:#fff; text-decoration:none;
+}
 @media (prefers-color-scheme:dark) {
-    body {
-        color:white;background:#444
-    }
-    a:link {
-        color:#5bf
-    }
-    a:visited {
-        color:#ccf
-    }
+    body { color:white;background:#444 }
+    a:link { color:#5bf } a:visited { color:#ccf }
+    .card { border-color:#666 } .cn { color:#06324d }
 }
 </style>
-
+</head>
 <body>
-<h2>You did it!</h2>
+<h2>STIG Manager sample orchestration</h2>
 
-<p>You can look in the response headers from your browser’s development tools
-to see what information the server could provide about the CAC.</p>
-
+<!-- nginx SSI does not support nested if blocks: keep this to a single if / else. -->
 <!--# if expr="$ssl_client_s_dn" -->
 
-<p>Your CAC certificate's subject identifier is: <b><!--# echo var="ssl_client_s_dn" --></b> which
-expires in <b><!--# echo var="ssl_client_v_remain" --></b> days.</p>
-<pre><!--# echo var="ssl_client_raw_cert" --></pre>
+    <div class="card">
+        <p>Your certificate's <b>Common Name (CN)</b> is:</p>
+        <p><span class="cn"><!--# echo var="client_cn" default="(could not read CN)" --></span></p>
+        <p>If this is your <b>first time</b> signing in with this card, copy the value
+        above and use it as your <b>username</b> when you click <b>Register</b> in
+        STIG Manager. Your card will then sign you in automatically on future visits.</p>
+    </div>
+
+    <p class="muted">Full certificate subject:
+        <span class="mono"><!--# echo var="ssl_client_s_dn" --></span><br/>
+        Verification: <b><!--# echo var="ssl_client_verify" --></b> &middot;
+        expires in <b><!--# echo var="ssl_client_v_remain" --></b> days.</p>
 
 <!--# else -->
 
-<p>Something was wrong reading the CAC certificate, or server-side includes were disabled.</p>
+    <div class="card">
+        <p>No client certificate was detected on this connection.</p>
+        <p>That's fine &mdash; you can sign in with a username and password (click
+        <b>Register</b> in STIG Manager to create an account). To use a CAC/PIV smartcard,
+        make sure your reader is configured and your browser trusts the demo CA, then
+        reload this page to see your certificate's CN.</p>
+    </div>
 
 <!--# endif -->
+
+<p>
+    <a class="button" href="/stigman/">Open STIG Manager</a>
+    <a class="button" href="/kc/admin/">Keycloak admin</a>
+</p>
+
+<p class="muted">This is a localhost development/testing sample &mdash; not for production.</p>
 </body>
 </html>
