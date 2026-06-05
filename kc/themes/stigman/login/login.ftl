@@ -97,9 +97,9 @@
     <#elseif section = "info" >
         <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
             <div id="kc-registration-container">
-                <div id="kc-registration">
-                    <span>${msg("noAccount")} <a tabindex="8"
-                                                 href="${url.registrationUrl}">${msg("doRegister")}</a></span>
+                <div id="kc-registration" style="margin-top:1.25em; padding:0.9em 1.1em; border:1px solid #bcdfbf; border-left:6px solid #2e7d32; background:#eef7ee; border-radius:6px; text-align:center;">
+                    <span style="font-size:1.05em; font-weight:600; color:#274e29;">${msg("noAccount")}</span>
+                    <a tabindex="8" href="${url.registrationUrl}" style="display:inline-block; margin-left:0.6em; padding:7px 18px; background:#2e7d32; color:#fff; text-decoration:none; border-radius:5px; font-weight:700;">${msg("doRegister")}</a>
                 </div>
             </div>
         </#if>
