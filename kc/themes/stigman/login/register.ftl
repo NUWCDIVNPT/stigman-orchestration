@@ -11,10 +11,12 @@
     <#elseif section = "form">
 
         <#-- STIG Manager sample: CAC/PIV self-registration guidance -->
-        <div class="${properties.kcFormGroupClass!}" style="margin-bottom:1em; padding:0.75em 1em; border:1px solid #bee1f4; background:#e7f5fb; border-radius:4px;">
-            <strong>${msg("cacRegisterHintTitle")}</strong><br/>
-            ${msg("cacRegisterHintBody")}
-            <a href="/" target="_blank" rel="noopener">${msg("cacFindCnLink")}</a>
+        <div class="${properties.kcFormGroupClass!}" style="margin:0 0 1.25em; padding:0.9em 1.1em 1em; border:1px solid #e6c34a; border-left:6px solid #e6a817; background:#fff8e1; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.10); color:#5c4708;">
+            <div style="font-size:1.12em; font-weight:700; margin-bottom:0.35em;">🪪 ${msg("cacRegisterHintTitle")}</div>
+            <div>${msg("cacRegisterHintBody")}</div>
+            <div style="margin-top:0.75em;">
+                <a href="/" target="_blank" rel="noopener" style="display:inline-block; padding:7px 16px; background:#0a64c2; color:#fff; text-decoration:none; border-radius:5px; font-weight:600;">${msg("cacFindCnLink")}</a>
+            </div>
         </div>
 
         <form id="kc-register-form" class="${properties.kcFormClass!}" action="${url.registrationAction}" method="post">
