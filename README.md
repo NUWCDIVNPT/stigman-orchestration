@@ -8,7 +8,6 @@ the configuration most deployments need:
 - STIG Manager's **front-channel / back-channel** OIDC split
 - Username/password login with **self-registration**
 - **Optional** CAC/PIV smartcard login using Keycloak's **built-in** X.509 authenticator
-  (no custom plugins)
 
 ## Limitations of this example
 
@@ -94,17 +93,10 @@ To find your CN, open the sample's **landing page at <https://localhost/>** — 
 your certificate's CN (and full subject) for easy copy-paste. nginx extracts it from the
 client certificate it already validated; the login and **Register** pages also link to it.
 
-This uses Keycloak's **built-in** X.509 authenticator — there is no custom provider in
-this repo.
-
-> **First-time CAC note:** built-in Keycloak cannot display your certificate's CN on the
-> login screen, nor auto-create an account from it — that requires a custom authenticator
-> (SPI), which this sample intentionally omits. So on first use you'll briefly see
-> Keycloak's generic "X509 certificate authentication's failed / Invalid user" message
-> before the login page. That's why the sample shows your CN on the landing page above and
-> the login theme ([`kc/themes/stigman`](kc/themes/stigman)) reminds you to register with
-> it. If you want the smoother "show my CN on the login screen / auto-create" experience,
-> add your own X.509 authenticator provider.
+> **First-time CAC note:** the first time you present a card that has no matching account,
+> Keycloak briefly shows an "Invalid user" message and then the login page — this is
+> expected. Register with your CN (shown on <https://localhost/>) and from then on your
+> card signs you in automatically.
 
 ### Keycloak admin console
 

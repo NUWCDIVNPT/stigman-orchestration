@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Docker Compose orchestration that runs STIG Manager with a Keycloak identity provider
 behind an nginx reverse proxy. Auth is Keycloak username/password with self-registration,
-plus **optional** CAC/PIV smartcard login via Keycloak's **built-in** X.509 authenticator
-(no custom plugins). Designed for **localhost development/testing only** — NOT for production.
+plus **optional** CAC/PIV smartcard login via Keycloak's **built-in** X.509 authenticator.
+Designed for **localhost development/testing only** — NOT for production.
 
 ## Architecture
 
@@ -21,7 +21,7 @@ which still depicts the older mandatory-mTLS design — pending a redraw):
    landing page (`nginx/index.html`) can show the user their CN for self-registration.
 2. **keycloak** (port 8080) — identity provider on the `/kc` subpath. The realm's
    `X.509 Browser` flow uses the **built-in** `auth-x509-client-username-form` authenticator
-   (CN → username) as an alternative above the username/password forms. No custom SPI jar.
+   (CN → username) as an alternative above the username/password forms.
 3. **stigman** (port 54000) — STIG Manager API/web app; uses back channel
    (`STIGMAN_OIDC_PROVIDER`) and front channel (`STIGMAN_CLIENT_OIDC_PROVIDER`) Keycloak URLs.
 4. **mysql** — database backend; persistent storage in `mysql-data/` (gitignored).
@@ -80,12 +80,10 @@ docker compose down && rm -rf mysql-data && docker compose up   # reset DB
 3. Keycloak's built-in X.509 authenticator maps the cert CN to a username:
    - match → single sign-on;
    - no match (or no cert) → falls through to the username/password + **Register** form.
-4. First-time CAC users register with their certificate CN as the username (the login
-   theme adds a static reminder; built-in Keycloak can't display the actual CN value).
+4. First-time CAC users register with their certificate CN as the username. The login
+   theme adds a static reminder, and the nginx landing page (`nginx/index.html`) shows
+   the CN (via `$client_cn`) for copy-paste.
 5. Keycloak issues an OAuth2 token; STIG Manager validates it for API access.
-
-Auto-creating an account from a certificate is the only piece that needs a custom
-authenticator/SPI; this sample uses self-registration instead.
 
 ## Privileges
 

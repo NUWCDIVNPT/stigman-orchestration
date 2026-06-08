@@ -2,7 +2,7 @@
 # Generic localhost dev/test sample. NOT for production.
 #
 # Auth: Keycloak username/password with self-registration, plus OPTIONAL CAC/PIV
-# smartcard login via Keycloak's built-in X.509 authenticator (no custom plugin).
+# smartcard login via Keycloak's built-in X.509 authenticator.
 # See README.md.
 
 services:
@@ -50,11 +50,6 @@ services:
       - ./kc/stigman_realm.json:/opt/keycloak/data/import/stigman_realm.json
       # Custom login theme (shows the CN to first-time CAC users so they can self-register)
       - ./kc/themes/stigman:/opt/keycloak/themes/stigman
-      # NOTE: This sample uses Keycloak's BUILT-IN X.509 authenticator. Automatically
-      # creating an account from a certificate requires a custom authenticator provider
-      # (SPI), which is intentionally not included. To add one, mount it here, e.g.:
-      # - ./kc/your-x509-authenticator.jar:/opt/keycloak/providers/your-x509-authenticator.jar
-      #
       # uncomment below to persist Keycloak data
       # - ./kc/h2:/opt/keycloak/data/h2
   stigman:
