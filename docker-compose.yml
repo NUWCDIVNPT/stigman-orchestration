@@ -67,6 +67,7 @@ services:
       - STIGMAN_DB_HOST=mysql
       - STIGMAN_DB_USER=stigman
       - STIGMAN_DB_PASSWORD=stigmanpw
+      - STIGMAN_EXPERIMENTAL_APPDATA=true
     init: true
   mysql:
     image: mysql:8.0.38

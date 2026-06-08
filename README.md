@@ -16,27 +16,6 @@ for production use.** It is a starting point to illustrate the moving parts; ada
 your environment and your organization's security policy. The Keycloak realm in
 `kc/stigman_realm.json` is a convenience for the demo and is **not** a production realm.
 
-## Going beyond localhost
-
-To make this reachable at a real hostname, the main changes are:
-
-- **TLS certificate** — replace the demo `localhost` cert in [`certs/localhost/`](certs/localhost/)
-  with one issued for your hostname by a CA your clients already trust, and update the
-  `nginx` cert/key mounts in `docker-compose.yml`. (Then users no longer import `demoCA`.)
-- **nginx** — set `server_name` in [`nginx/nginx.conf`](nginx/nginx.conf) to your hostname,
-  and make sure DNS and your firewall route `443` to the host.
-- **Keycloak public URL** — set `KC_HOSTNAME=https://your.host/kc`.
-- **STIG Manager front channel** — set `STIGMAN_CLIENT_OIDC_PROVIDER=https://your.host/kc/realms/stigman`.
-  The back channel (`STIGMAN_OIDC_PROVIDER`) stays on the internal container URL.
-- **Client redirect URIs / web origins** — the demo `stig-manager` client uses wildcards;
-  restrict its Valid Redirect URIs and Web Origins to your host.
-- **Change the demo secrets** — the admin password (`KC_BOOTSTRAP_ADMIN_PASSWORD`), MySQL
-  passwords, and any client secrets.
-- **Persist Keycloak** — the demo imports the realm into an ephemeral H2 database on each
-  start; back it with a real database and manage the realm directly instead of re-importing.
-- **Review per your security policy** — default roles, token lifespans, registration,
-  email verification (SMTP), CAC enforcement, etc.
-
 ## General architecture
 
 ![Reverse proxy architecture](diagrams/kc-reverse-1.svg)
@@ -114,10 +93,11 @@ To find your CN, open the sample's **landing page at <https://localhost/>** — 
 your certificate's CN (and full subject) for easy copy-paste. nginx extracts it from the
 client certificate it already validated; the login and **Register** pages also link to it.
 
-> **First-time CAC note:** the first time you present a card that has no matching account,
-> Keycloak briefly shows an "Invalid user" message and then the login page — this is
-> expected. Register with your CN (shown on <https://localhost/>) and from then on your
-> card signs you in automatically.
+> **First-time CAC note:** when your card doesn't match an account yet, you land on the
+> login page with an "Invalid user" warning shown directly above the "First time signing
+> in with a CAC/PIV smartcard?" notice — this is expected. Follow that notice: register
+> with your CN (shown on <https://localhost/>), and your card signs you in automatically
+> from then on.
 
 ### Keycloak admin console
 
@@ -216,6 +196,27 @@ full admin. That's a demo convenience, not a recommendation: for a real deployme
 suggest granting `create_collection` by default and assigning `admin` per-user. Change it
 either way by editing `default-roles-stigman` and assigning roles in the Keycloak admin
 console (Users → Role mapping).
+
+### Going beyond localhost
+
+To make this reachable at a real hostname, the main changes are:
+
+- **TLS certificate** — replace the demo `localhost` cert in [`certs/localhost/`](certs/localhost/)
+  with one issued for your hostname by a CA your clients already trust, and update the
+  `nginx` cert/key mounts in `docker-compose.yml`. (Then users no longer import `demoCA`.)
+- **nginx** — set `server_name` in [`nginx/nginx.conf`](nginx/nginx.conf) to your hostname,
+  and make sure DNS and your firewall route `443` to the host.
+- **Keycloak public URL** — set `KC_HOSTNAME=https://your.host/kc`.
+- **STIG Manager front channel** — set `STIGMAN_CLIENT_OIDC_PROVIDER=https://your.host/kc/realms/stigman`.
+  The back channel (`STIGMAN_OIDC_PROVIDER`) stays on the internal container URL.
+- **Client redirect URIs / web origins** — the demo `stig-manager` client uses wildcards;
+  restrict its Valid Redirect URIs and Web Origins to your host.
+- **Change the demo secrets** — the admin password (`KC_BOOTSTRAP_ADMIN_PASSWORD`), MySQL
+  passwords, and any client secrets.
+- **Persist Keycloak** — the demo imports the realm into an ephemeral H2 database on each
+  start; back it with a real database and manage the realm directly instead of re-importing.
+- **Review per your security policy** — default roles, token lifespans, registration,
+  email verification (SMTP), CAC enforcement, etc.
 
 ## Updating DoD certificates
 
