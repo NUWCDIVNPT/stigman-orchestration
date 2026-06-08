@@ -95,9 +95,9 @@ The web app redirects you to Keycloak to authenticate.
 
 ### Username / password (with self-registration)
 
-On the login page, click **Register** to create an account, then sign in. By default new
-users can create their own Collections; see [Privileges](#privileges-roles) for the role
-setup and how to grant admin.
+On the login page, click **Register** to create an account, then sign in. So you can try
+every part of the system, this demo realm makes every registered user a full admin (see
+[Privileges](#privileges-roles)).
 
 ### Optional: CAC/PIV smartcard login
 
@@ -210,12 +210,12 @@ other case falls through to the username/password + Register form.
 #### Privileges (roles)
 
 STIG Manager reads two privilege roles from the token: `admin` and `create_collection`.
-This realm's default role (`default-roles-stigman`) grants new users `create_collection`
-(so they can create their own Collections) plus baseline read access — but **not**
-`admin`. Grant `admin` to specific users in the Keycloak admin console (Users → Role
-mapping). You can change the default either way by editing `default-roles-stigman` — e.g.
-add `admin` to it for an all-admin test setup, or drop `create_collection` for a more
-restricted default.
+To make it easy to exercise the whole system, this demo realm's default role
+(`default-roles-stigman`) grants **both** to every user — so anyone who registers is a
+full admin. That's a demo convenience, not a recommendation: for a real deployment we'd
+suggest granting `create_collection` by default and assigning `admin` per-user. Change it
+either way by editing `default-roles-stigman` and assigning roles in the Keycloak admin
+console (Users → Role mapping).
 
 ## Updating DoD certificates
 
