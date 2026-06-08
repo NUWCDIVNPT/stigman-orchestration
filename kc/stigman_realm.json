@@ -73,7 +73,7 @@
       "description" : "${role_default-roles}",
       "composite" : true,
       "composites" : {
-        "realm" : [ "create_collection", "admin" ],
+        "realm" : [ "create_collection", "user" ],
         "client" : {
           "realm-management" : [ "view-users" ],
           "account" : [ "view-profile", "manage-account" ]

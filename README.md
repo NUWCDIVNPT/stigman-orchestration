@@ -1,8 +1,8 @@
-# STIG Manager + Keycloak behind a reverse proxy
+# STIG Manager + Keycloak with optional CAC authentication
 
 An example docker-compose orchestration that runs **STIG Manager** with a **Keycloak**
-identity provider behind an **nginx** reverse proxy that terminates TLS. It demonstrates
-the configuration most deployments need:
+identity provider behind an **nginx** reverse proxy that terminates TLS, with optional
+CAC/PIV smartcard authentication. It demonstrates the configuration most deployments need:
 
 - Keycloak running on a **subpath** (`/kc`) behind a TLS-terminating proxy
 - STIG Manager's **front-channel / back-channel** OIDC split
@@ -15,6 +15,27 @@ the configuration most deployments need:
 for production use.** It is a starting point to illustrate the moving parts; adapt it to
 your environment and your organization's security policy. The Keycloak realm in
 `kc/stigman_realm.json` is a convenience for the demo and is **not** a production realm.
+
+## Going beyond localhost
+
+To make this reachable at a real hostname, the main changes are:
+
+- **TLS certificate** — replace the demo `localhost` cert in [`certs/localhost/`](certs/localhost/)
+  with one issued for your hostname by a CA your clients already trust, and update the
+  `nginx` cert/key mounts in `docker-compose.yml`. (Then users no longer import `demoCA`.)
+- **nginx** — set `server_name` in [`nginx/nginx.conf`](nginx/nginx.conf) to your hostname,
+  and make sure DNS and your firewall route `443` to the host.
+- **Keycloak public URL** — set `KC_HOSTNAME=https://your.host/kc`.
+- **STIG Manager front channel** — set `STIGMAN_CLIENT_OIDC_PROVIDER=https://your.host/kc/realms/stigman`.
+  The back channel (`STIGMAN_OIDC_PROVIDER`) stays on the internal container URL.
+- **Client redirect URIs / web origins** — the demo `stig-manager` client uses wildcards;
+  restrict its Valid Redirect URIs and Web Origins to your host.
+- **Change the demo secrets** — the admin password (`KC_BOOTSTRAP_ADMIN_PASSWORD`), MySQL
+  passwords, and any client secrets.
+- **Persist Keycloak** — the demo imports the realm into an ephemeral H2 database on each
+  start; back it with a real database and manage the realm directly instead of re-importing.
+- **Review per your security policy** — default roles, token lifespans, registration,
+  email verification (SMTP), CAC enforcement, etc.
 
 ## General architecture
 
@@ -74,9 +95,9 @@ The web app redirects you to Keycloak to authenticate.
 
 ### Username / password (with self-registration)
 
-On the login page, click **Register** to create an account, then sign in. By default
-this realm grants every registered user full admin privileges **for demo purposes**
-(see [Privileges](#privileges-roles)).
+On the login page, click **Register** to create an account, then sign in. By default new
+users can create their own Collections; see [Privileges](#privileges-roles) for the role
+setup and how to grant admin.
 
 ### Optional: CAC/PIV smartcard login
 
@@ -142,7 +163,9 @@ the user their CN — handy for self-registration.
 
 ### STIG Manager
 
-STIG Manager splits its OIDC provider URL into a back channel and a front channel:
+Behind a reverse proxy, the browser and the API reach Keycloak at different URLs (the
+browser through the proxy, the API directly on the container network). STIG Manager lets
+you configure those two OIDC provider URLs separately:
 
 | Variable | Purpose | Value in this sample |
 |----------|---------|----------------------|
@@ -159,8 +182,7 @@ for the full list.
 
 ### Keycloak — reverse proxy on a subpath
 
-The Keycloak settings that make it work behind the proxy on `/kc` (these change
-frequently between Keycloak versions — these are for **Keycloak 26**):
+The Keycloak settings that make it work behind the proxy on `/kc` (for **Keycloak 26**):
 
 | Variable | Purpose |
 |----------|---------|
@@ -171,11 +193,8 @@ frequently between Keycloak versions — these are for **Keycloak 26**):
 | `KC_SPI_X509CERT_LOOKUP_PROVIDER=nginx` | Read the client cert forwarded by nginx (for CAC/PIV) |
 | `KC_SPI_X509CERT_LOOKUP_NGINX_SSL_CLIENT_CERT=SSL-CLIENT-CERT` | Header name carrying the client cert |
 
-> Earlier Keycloak versions used `KC_PROXY=edge` and `KC_HOSTNAME_URL`. Those are
-> removed/renamed in Keycloak 26 — see the Keycloak
-> [reverse proxy](https://www.keycloak.org/server/reverseproxy) and
-> [hostname](https://www.keycloak.org/server/hostname) guides. Configure Keycloak per
-> your own version and security policy; do not copy this realm as-is into production.
+> See the Keycloak [reverse proxy](https://www.keycloak.org/server/reverseproxy) and
+> [hostname](https://www.keycloak.org/server/hostname) guides for details.
 
 #### Authentication flow / CAC
 
@@ -190,17 +209,20 @@ other case falls through to the username/password + Register form.
 
 #### Privileges (roles)
 
-STIG Manager reads two realm roles from the token: `admin` and `create_collection`. In
-this demo realm the default role grants **both** to every user, so anyone who registers
-is an admin — convenient for testing, **not** appropriate for production. To change this,
-edit the `default-roles-stigman` role and assign `admin` / `create_collection` to
-individual users in the Keycloak admin console (Users → Role mapping).
+STIG Manager reads two privilege roles from the token: `admin` and `create_collection`.
+This realm's default role (`default-roles-stigman`) grants new users `create_collection`
+(so they can create their own Collections) plus baseline read access — but **not**
+`admin`. Grant `admin` to specific users in the Keycloak admin console (Users → Role
+mapping). You can change the default either way by editing `default-roles-stigman` — e.g.
+add `admin` to it for an all-admin test setup, or drop `create_collection` for a more
+restricted default.
 
 ## Updating DoD certificates
 
 If you use the DoD PKI bundle for CAC validation:
 
-1. Download from <https://dl.cyber.mil/pki-pke/zip/unclass-certificates_pkcs7_DoD.zip>
+1. Download the current DoD PKI CA certificate bundle (PKCS#7) from the
+   [DoD Cyber Exchange PKI-PKE page](https://public.cyber.mil/pki-pke/)
 2. Extract the PKCS#7 file
 3. Run [`certs/dod/p7b-convert.sh`](certs/dod/p7b-convert.sh) to convert it to PEM
 
