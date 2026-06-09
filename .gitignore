@@ -4,6 +4,4 @@
 mysql-data/
 kc/h2/
 
-# Local scratch / experiment files, not part of the sample
-scratch/
-*.log
+
