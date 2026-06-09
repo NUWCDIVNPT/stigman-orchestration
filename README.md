@@ -114,10 +114,10 @@ Login with `admin` / `Pa55w0rd` (set by `KC_BOOTSTRAP_ADMIN_USERNAME` /
 docker compose down
 ```
 
-To also wipe the database and start fresh:
+To also wipe the database and start fresh (the `-v` removes the MySQL data volume):
 
 ```
-docker compose down && rm -rf mysql-data && docker compose up
+docker compose down -v && docker compose up
 ```
 
 ## Configurations
